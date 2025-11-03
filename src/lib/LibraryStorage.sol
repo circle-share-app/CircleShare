@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 library Storage {
-    struct Group {
-        address groupAddress;
+    struct Circle {
+        address circleAddress;
         Member[] members;
         string name;
         string description;
     }
 
     struct Member {
-        address memberAdress;
+        address memberAddress;
         Role role;
     }
 
