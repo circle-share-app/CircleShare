@@ -8,21 +8,13 @@ import {Error} from "./lib/Error.sol";
 contract CircleFactory {
     using Error for *;
 
-    event CircleCreated(
-        address indexed circleAddress,
-        string name,
-        string description,
-        address indexed admin
-    );
+    event CircleCreated(address indexed circleAddress, string name, string description, address indexed admin);
 
     address[] private _circles;
     mapping(string => address) private _circleByName;
     mapping(bytes32 => bool) private _nameExists;
 
-    function createCircle(
-        string memory name,
-        string memory description
-    ) public returns (address circleAddress) {
+    function createCircle(string memory name, string memory description) public returns (address circleAddress) {
         bytes32 hash = keccak256(abi.encodePacked(name));
         if (_nameExists[hash]) revert Error.ConflictError("Name already exists");
 
@@ -104,9 +96,7 @@ contract CircleFactory {
         return activeCircles;
     }
 
-    function getCircleByName(
-        string memory name
-    ) external view returns (address) {
+    function getCircleByName(string memory name) external view returns (address) {
         address circleAddress = _circleByName[name];
         if (circleAddress == address(0)) revert Error.NotFoundError("Circle not found");
         if (!ICircle(circleAddress).isMember(msg.sender)) {

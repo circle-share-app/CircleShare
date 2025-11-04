@@ -40,36 +40,16 @@ contract CircleTest is Test {
 
     function testNonMembersCannotViewCircleOrMembers() public {
         vm.startPrank(STRANGER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         circle.getCircle();
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         circle.getMembers();
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         circle.getRole(ADMIN);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         circle.hasPermission(ADMIN, Storage.Permission.ADD_USER);
         vm.stopPrank();
     }
@@ -91,12 +71,7 @@ contract CircleTest is Test {
 
     function testAddMemberRejectsZeroAddress() public {
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Invalid member address"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Invalid member address"));
         circle.addMember(address(0));
     }
 
@@ -105,12 +80,7 @@ contract CircleTest is Test {
         circle.addMember(MEMBER);
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Already a member"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Already a member"));
         circle.addMember(MEMBER);
     }
 
@@ -131,12 +101,7 @@ contract CircleTest is Test {
         circle.addMember(MODERATOR);
 
         vm.prank(MODERATOR);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         circle.addMember(STRANGER);
     }
 
@@ -169,12 +134,7 @@ contract CircleTest is Test {
 
     function testRemoveMemberRequiresMembership() public {
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.NotFoundError.selector,
-                "Member not found"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.NotFoundError.selector, "Member not found"));
         circle.removeMember(MEMBER);
     }
 
@@ -189,10 +149,7 @@ contract CircleTest is Test {
         circle.removeMember(MEMBER);
 
         vm.prank(ADMIN);
-        bool hasPerm = circle.hasPermission(
-            MEMBER,
-            Storage.Permission.ADD_USER
-        );
+        bool hasPerm = circle.hasPermission(MEMBER, Storage.Permission.ADD_USER);
         assertFalse(hasPerm, "permission should be cleared on removal");
     }
 
@@ -213,23 +170,13 @@ contract CircleTest is Test {
         circle.addMember(MEMBER);
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Invalid role"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Invalid role"));
         circle.assignRole(MEMBER, Storage.Role.USER);
     }
 
     function testAssignRoleRequiresMembership() public {
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.NotFoundError.selector,
-                "Member not found"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.NotFoundError.selector, "Member not found"));
         circle.assignRole(MEMBER, Storage.Role.MODERATOR);
     }
 
@@ -238,12 +185,7 @@ contract CircleTest is Test {
         circle.addMember(MEMBER);
 
         vm.prank(MEMBER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         circle.assignRole(MEMBER, Storage.Role.MODERATOR);
     }
 
@@ -264,12 +206,7 @@ contract CircleTest is Test {
 
     function testRevokeRoleRequiresMembership() public {
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.NotFoundError.selector,
-                "Member not found"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.NotFoundError.selector, "Member not found"));
         circle.revokeRole(MEMBER, Storage.Role.MODERATOR);
     }
 
@@ -278,12 +215,7 @@ contract CircleTest is Test {
         circle.addMember(MEMBER);
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Role mismatch"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Role mismatch"));
         circle.revokeRole(MEMBER, Storage.Role.MODERATOR);
     }
 
@@ -295,21 +227,13 @@ contract CircleTest is Test {
         circle.assignPermission(MEMBER, Storage.Permission.ADD_USER);
 
         vm.prank(ADMIN);
-        bool hasPerm = circle.hasPermission(
-            MEMBER,
-            Storage.Permission.ADD_USER
-        );
+        bool hasPerm = circle.hasPermission(MEMBER, Storage.Permission.ADD_USER);
         assertTrue(hasPerm, "permission flag not set");
     }
 
     function testAssignPermissionRequiresMembership() public {
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.NotFoundError.selector,
-                "Member not found"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.NotFoundError.selector, "Member not found"));
         circle.assignPermission(MEMBER, Storage.Permission.ADD_USER);
     }
 
@@ -323,10 +247,7 @@ contract CircleTest is Test {
         vm.stopPrank();
 
         vm.prank(ADMIN);
-        bool hasPerm = circle.hasPermission(
-            MEMBER,
-            Storage.Permission.ADD_USER
-        );
+        bool hasPerm = circle.hasPermission(MEMBER, Storage.Permission.ADD_USER);
         assertFalse(hasPerm, "permission flag not cleared");
     }
 
@@ -335,12 +256,7 @@ contract CircleTest is Test {
         circle.addMember(MEMBER);
 
         vm.prank(MEMBER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         circle.assignPermission(MEMBER, Storage.Permission.ADD_USER);
     }
 
@@ -349,12 +265,7 @@ contract CircleTest is Test {
         circle.addMember(MEMBER);
 
         vm.prank(STRANGER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         circle.hasPermission(MEMBER, Storage.Permission.ADD_USER);
     }
 
@@ -391,23 +302,13 @@ contract CircleTest is Test {
         circle.deactivateCircle();
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Circle is already inactive"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Circle is already inactive"));
         circle.deactivateCircle();
     }
 
     function testReactivateCircleRevertsIfAlreadyActive() public {
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Circle is already active"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Circle is already active"));
         circle.reactivateCircle();
     }
 
@@ -417,10 +318,7 @@ contract CircleTest is Test {
 
         vm.prank(MEMBER);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Only creator or admin can perform this action"
-            )
+            abi.encodeWithSelector(Error.ForbiddenError.selector, "Only creator or admin can perform this action")
         );
         circle.deactivateCircle();
     }
@@ -430,12 +328,7 @@ contract CircleTest is Test {
         circle.deactivateCircle();
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.CircleInactiveError.selector,
-                "Circle is inactive"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.CircleInactiveError.selector, "Circle is inactive"));
         circle.addMember(MEMBER);
     }
 
@@ -447,12 +340,7 @@ contract CircleTest is Test {
         circle.deactivateCircle();
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.CircleInactiveError.selector,
-                "Circle is inactive"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.CircleInactiveError.selector, "Circle is inactive"));
         circle.removeMember(MEMBER);
     }
 
@@ -477,12 +365,7 @@ contract CircleTest is Test {
         circle.assignRole(MODERATOR, Storage.Role.MODERATOR);
 
         vm.prank(MODERATOR);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Only creator can perform this action"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Only creator can perform this action"));
         circle.inviteMember(MEMBER, "Bob");
     }
 
@@ -491,23 +374,13 @@ contract CircleTest is Test {
         circle.addMember(MEMBER);
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Already a member"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Already a member"));
         circle.inviteMember(MEMBER, "Alice");
     }
 
     function testInviteMemberRevertsForZeroAddress() public {
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.InvalidInputError.selector,
-                "Invalid invitee address"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.InvalidInputError.selector, "Invalid invitee address"));
         circle.inviteMember(address(0), "Nobody");
     }
 
@@ -516,12 +389,7 @@ contract CircleTest is Test {
         circle.inviteMember(MEMBER, "Alice");
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Invitation already pending"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Invitation already pending"));
         circle.inviteMember(MEMBER, "Alice Again");
     }
 
@@ -545,12 +413,7 @@ contract CircleTest is Test {
 
     function testAcceptInvitationRevertsIfNoInvitation() public {
         vm.prank(MEMBER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.NotFoundError.selector,
-                "No invitation found"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.NotFoundError.selector, "No invitation found"));
         circle.acceptInvitation();
     }
 
@@ -562,12 +425,7 @@ contract CircleTest is Test {
         circle.acceptInvitation();
 
         vm.prank(MEMBER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Invitation already accepted"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Invitation already accepted"));
         circle.acceptInvitation();
     }
 
@@ -593,12 +451,7 @@ contract CircleTest is Test {
         circle.rejectInvitation();
 
         vm.prank(MEMBER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Invitation already rejected"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Invitation already rejected"));
         circle.rejectInvitation();
     }
 
@@ -607,12 +460,7 @@ contract CircleTest is Test {
         circle.deactivateCircle();
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.CircleInactiveError.selector,
-                "Circle is inactive"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.CircleInactiveError.selector, "Circle is inactive"));
         circle.inviteMember(MEMBER, "Alice");
     }
 
@@ -624,12 +472,7 @@ contract CircleTest is Test {
         circle.deactivateCircle();
 
         vm.prank(MEMBER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.CircleInactiveError.selector,
-                "Circle is inactive"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.CircleInactiveError.selector, "Circle is inactive"));
         circle.acceptInvitation();
     }
 
@@ -729,12 +572,7 @@ contract CircleTest is Test {
         address[] memory participants = new address[](1);
         participants[0] = ADMIN;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         circle.addExpense("Groceries", 100, participants);
     }
 
@@ -743,12 +581,7 @@ contract CircleTest is Test {
         participants[0] = ADMIN;
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.InvalidInputError.selector,
-                "Description cannot be empty"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.InvalidInputError.selector, "Description cannot be empty"));
         circle.addExpense("", 100, participants);
     }
 
@@ -758,17 +591,12 @@ contract CircleTest is Test {
 
         string memory longDesc = new string(201);
         bytes memory longDescBytes = bytes(longDesc);
-        for (uint i = 0; i < 201; i++) {
+        for (uint256 i = 0; i < 201; i++) {
             longDescBytes[i] = "a";
         }
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.InvalidInputError.selector,
-                "Description too long"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.InvalidInputError.selector, "Description too long"));
         circle.addExpense(string(longDescBytes), 100, participants);
     }
 
@@ -777,12 +605,7 @@ contract CircleTest is Test {
         participants[0] = ADMIN;
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.InvalidInputError.selector,
-                "Amount must be greater than zero"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.InvalidInputError.selector, "Amount must be greater than zero"));
         circle.addExpense("Groceries", 0, participants);
     }
 
@@ -790,12 +613,7 @@ contract CircleTest is Test {
         address[] memory participants = new address[](0);
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.InvalidInputError.selector,
-                "Must have at least one participant"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.InvalidInputError.selector, "Must have at least one participant"));
         circle.addExpense("Groceries", 100, participants);
     }
 
@@ -804,12 +622,7 @@ contract CircleTest is Test {
         participants[0] = STRANGER;
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.NotFoundError.selector,
-                "Participant is not a member"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.NotFoundError.selector, "Participant is not a member"));
         circle.addExpense("Groceries", 100, participants);
     }
 
@@ -819,12 +632,7 @@ contract CircleTest is Test {
         participants[1] = ADMIN;
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Duplicate participants"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Duplicate participants"));
         circle.addExpense("Groceries", 100, participants);
     }
 
@@ -847,12 +655,7 @@ contract CircleTest is Test {
 
     function testGetExpenseByIdRevertsForInvalidId() public {
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.NotFoundError.selector,
-                "Expense not found"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.NotFoundError.selector, "Expense not found"));
         circle.getExpense(999);
     }
 
@@ -864,12 +667,7 @@ contract CircleTest is Test {
         participants[0] = ADMIN;
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.CircleInactiveError.selector,
-                "Circle is inactive"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.CircleInactiveError.selector, "Circle is inactive"));
         circle.addExpense("Groceries", 100, participants);
     }
 
@@ -901,12 +699,7 @@ contract CircleTest is Test {
         }
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Maximum members reached"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Maximum members reached"));
         circle.addMember(address(100));
     }
 
@@ -917,12 +710,7 @@ contract CircleTest is Test {
         }
 
         vm.prank(ADMIN);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ConflictError.selector,
-                "Maximum members reached"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ConflictError.selector, "Maximum members reached"));
         circle.inviteMember(address(100), "Too Many");
     }
 }

@@ -8,8 +8,7 @@ import {Error} from "./lib/Error.sol";
 contract Circle is ICircle {
     using Error for *;
 
-    mapping(address => mapping(Storage.Permission => bool))
-        private permissionsAssigned;
+    mapping(address => mapping(Storage.Permission => bool)) private permissionsAssigned;
     mapping(address => Storage.Role) private roleAssigned;
     mapping(address => bool) private _isMember;
     mapping(address => Storage.Invitation) private pendingInvitations;
@@ -22,11 +21,7 @@ contract Circle is ICircle {
     uint256 private constant MAX_MEMBERS = 50;
     uint256 private constant MAX_DESCRIPTION_LENGTH = 200;
 
-    constructor(
-        address _admin,
-        string memory _name,
-        string memory _description
-    ) {
+    constructor(address _admin, string memory _name, string memory _description) {
         circle.circleAddress = address(this);
         circle.name = _name;
         circle.description = _description;
@@ -35,13 +30,7 @@ contract Circle is ICircle {
 
         roleAssigned[_admin] = Storage.Role.ADMIN;
 
-        circle.members.push(
-            Storage.Member({
-                memberAddress: _admin,
-                role: Storage.Role.ADMIN,
-                nickname: ""
-            })
-        );
+        circle.members.push(Storage.Member({memberAddress: _admin, role: Storage.Role.ADMIN, nickname: ""}));
         _isMember[_admin] = true;
         nextExpenseId = 1;
     }
@@ -100,13 +89,7 @@ contract Circle is ICircle {
             revert Error.ConflictError("Maximum members reached");
         }
 
-        circle.members.push(
-            Storage.Member({
-                memberAddress: memberAddress,
-                role: Storage.Role.MEMBER,
-                nickname: ""
-            })
-        );
+        circle.members.push(Storage.Member({memberAddress: memberAddress, role: Storage.Role.MEMBER, nickname: ""}));
 
         roleAssigned[memberAddress] = Storage.Role.MEMBER;
         _isMember[memberAddress] = true;
@@ -119,15 +102,16 @@ contract Circle is ICircle {
             revert Error.NotFoundError("Member not found");
         }
 
-        uint indexToRemove = type(uint).max;
-        for (uint i = 0; i < circle.members.length; i++) {
+        uint256 indexToRemove = type(uint256).max;
+        for (uint256 i = 0; i < circle.members.length; i++) {
             if (circle.members[i].memberAddress == memberAddress) {
                 indexToRemove = i;
                 break;
             }
         }
-        if (indexToRemove == type(uint).max)
+        if (indexToRemove == type(uint256).max) {
             revert Error.ConflictError("Member not found");
+        }
 
         Storage.Role role = roleAssigned[memberAddress];
 
@@ -136,38 +120,21 @@ contract Circle is ICircle {
 
         delete roleAssigned[memberAddress];
         _isMember[memberAddress] = false;
-        permissionsAssigned[memberAddress][
-            Storage.Permission.REMOVE_USER
-        ] = false;
-        permissionsAssigned[memberAddress][
-            Storage.Permission.ADD_USER
-        ] = false;
+        permissionsAssigned[memberAddress][Storage.Permission.REMOVE_USER] = false;
+        permissionsAssigned[memberAddress][Storage.Permission.ADD_USER] = false;
 
         emit MemberRemoved(memberAddress, role);
     }
 
-    function getCircle()
-        external
-        view
-        onlyMember
-        returns (Storage.Circle memory)
-    {
+    function getCircle() external view onlyMember returns (Storage.Circle memory) {
         return circle;
     }
 
-    function getMembers()
-        external
-        view
-        onlyMember
-        returns (Storage.Member[] memory)
-    {
+    function getMembers() external view onlyMember returns (Storage.Member[] memory) {
         return circle.members;
     }
 
-    function assignRole(
-        address memberAddress,
-        Storage.Role role
-    ) external onlyAdmin {
+    function assignRole(address memberAddress, Storage.Role role) external onlyAdmin {
         if (!_isMember[memberAddress]) {
             revert Error.NotFoundError("Member not found");
         }
@@ -177,7 +144,7 @@ contract Circle is ICircle {
 
         roleAssigned[memberAddress] = role;
 
-        for (uint i = 0; i < circle.members.length; i++) {
+        for (uint256 i = 0; i < circle.members.length; i++) {
             if (circle.members[i].memberAddress == memberAddress) {
                 circle.members[i].role = role;
                 break;
@@ -187,10 +154,7 @@ contract Circle is ICircle {
         emit RoleAssigned(memberAddress, role);
     }
 
-    function revokeRole(
-        address memberAddress,
-        Storage.Role role
-    ) external onlyAdmin {
+    function revokeRole(address memberAddress, Storage.Role role) external onlyAdmin {
         if (!_isMember[memberAddress]) {
             revert Error.NotFoundError("Member not found");
         }
@@ -200,7 +164,7 @@ contract Circle is ICircle {
 
         roleAssigned[memberAddress] = Storage.Role.MEMBER;
 
-        for (uint i = 0; i < circle.members.length; i++) {
+        for (uint256 i = 0; i < circle.members.length; i++) {
             if (circle.members[i].memberAddress == memberAddress) {
                 circle.members[i].role = Storage.Role.MEMBER;
                 break;
@@ -210,10 +174,7 @@ contract Circle is ICircle {
         emit RoleRevoked(memberAddress, role);
     }
 
-    function assignPermission(
-        address memberAddress,
-        Storage.Permission permission
-    ) external onlyAdmin {
+    function assignPermission(address memberAddress, Storage.Permission permission) external onlyAdmin {
         if (!_isMember[memberAddress]) {
             revert Error.NotFoundError("Member not found");
         }
@@ -222,10 +183,7 @@ contract Circle is ICircle {
         emit PermissionAssigned(memberAddress, permission);
     }
 
-    function revokePermission(
-        address memberAddress,
-        Storage.Permission permission
-    ) external onlyAdmin {
+    function revokePermission(address memberAddress, Storage.Permission permission) external onlyAdmin {
         if (!_isMember[memberAddress]) {
             revert Error.NotFoundError("Member not found");
         }
@@ -234,9 +192,7 @@ contract Circle is ICircle {
         emit PermissionRevoked(memberAddress, permission);
     }
 
-    function getRole(
-        address memberAddress
-    ) external view onlyMember returns (Storage.Role) {
+    function getRole(address memberAddress) external view onlyMember returns (Storage.Role) {
         return roleAssigned[memberAddress];
     }
 
@@ -244,10 +200,12 @@ contract Circle is ICircle {
         return _isMember[memberAddress];
     }
 
-    function hasPermission(
-        address memberAddress,
-        Storage.Permission permission
-    ) external view onlyMember returns (bool) {
+    function hasPermission(address memberAddress, Storage.Permission permission)
+        external
+        view
+        onlyMember
+        returns (bool)
+    {
         return permissionsAssigned[memberAddress][permission];
     }
 
@@ -273,19 +231,17 @@ contract Circle is ICircle {
     }
 
     // Invitation Functions
-    function inviteMember(
-        address invitee,
-        string memory nickname
-    ) external onlyCreator onlyActive {
+    function inviteMember(address invitee, string memory nickname) external onlyCreator onlyActive {
         if (invitee == address(0)) {
             revert Error.InvalidInputError("Invalid invitee address");
         }
         if (_isMember[invitee]) {
             revert Error.ConflictError("Already a member");
         }
-        if (pendingInvitations[invitee].inviter != address(0) &&
-            !pendingInvitations[invitee].accepted &&
-            !pendingInvitations[invitee].rejected) {
+        if (
+            pendingInvitations[invitee].inviter != address(0) && !pendingInvitations[invitee].accepted
+                && !pendingInvitations[invitee].rejected
+        ) {
             revert Error.ConflictError("Invitation already pending");
         }
         if (circle.members.length >= MAX_MEMBERS) {
@@ -328,11 +284,7 @@ contract Circle is ICircle {
         invitation.accepted = true;
 
         circle.members.push(
-            Storage.Member({
-                memberAddress: msg.sender,
-                role: Storage.Role.MEMBER,
-                nickname: invitation.nickname
-            })
+            Storage.Member({memberAddress: msg.sender, role: Storage.Role.MEMBER, nickname: invitation.nickname})
         );
 
         roleAssigned[msg.sender] = Storage.Role.MEMBER;
@@ -364,17 +316,10 @@ contract Circle is ICircle {
         emit InvitationRejected(msg.sender, block.timestamp);
     }
 
-    function getPendingInvitations()
-        external
-        view
-        onlyCreator
-        returns (Storage.Invitation[] memory)
-    {
-        Storage.Invitation[] memory invitations = new Storage.Invitation[](
-            pendingInvitees.length
-        );
+    function getPendingInvitations() external view onlyCreator returns (Storage.Invitation[] memory) {
+        Storage.Invitation[] memory invitations = new Storage.Invitation[](pendingInvitees.length);
 
-        for (uint i = 0; i < pendingInvitees.length; i++) {
+        for (uint256 i = 0; i < pendingInvitees.length; i++) {
             invitations[i] = pendingInvitations[pendingInvitees[i]];
         }
 
@@ -382,7 +327,7 @@ contract Circle is ICircle {
     }
 
     function _removePendingInvitee(address invitee) private {
-        for (uint i = 0; i < pendingInvitees.length; i++) {
+        for (uint256 i = 0; i < pendingInvitees.length; i++) {
             if (pendingInvitees[i] == invitee) {
                 pendingInvitees[i] = pendingInvitees[pendingInvitees.length - 1];
                 pendingInvitees.pop();
@@ -392,11 +337,11 @@ contract Circle is ICircle {
     }
 
     // Expense Functions
-    function addExpense(
-        string memory description,
-        uint256 amount,
-        address[] memory participants
-    ) external onlyMember onlyActive {
+    function addExpense(string memory description, uint256 amount, address[] memory participants)
+        external
+        onlyMember
+        onlyActive
+    {
         if (bytes(description).length > MAX_DESCRIPTION_LENGTH) {
             revert Error.InvalidInputError("Description too long");
         }
@@ -411,15 +356,15 @@ contract Circle is ICircle {
         }
 
         // Validate all participants are members
-        for (uint i = 0; i < participants.length; i++) {
+        for (uint256 i = 0; i < participants.length; i++) {
             if (!_isMember[participants[i]]) {
                 revert Error.NotFoundError("Participant is not a member");
             }
         }
 
         // Check for duplicates
-        for (uint i = 0; i < participants.length; i++) {
-            for (uint j = i + 1; j < participants.length; j++) {
+        for (uint256 i = 0; i < participants.length; i++) {
+            for (uint256 j = i + 1; j < participants.length; j++) {
                 if (participants[i] == participants[j]) {
                     revert Error.ConflictError("Duplicate participants");
                 }
@@ -447,46 +392,32 @@ contract Circle is ICircle {
         balances[msg.sender] += int256(amount);
 
         // Each participant gets debited for their share
-        for (uint i = 0; i < participants.length; i++) {
+        for (uint256 i = 0; i < participants.length; i++) {
             balances[participants[i]] -= int256(splitAmount);
         }
 
         // Handle remainder by charging first participant(s)
         if (remainder > 0) {
-            for (uint i = 0; i < remainder; i++) {
+            for (uint256 i = 0; i < remainder; i++) {
                 balances[participants[i]] -= 1;
             }
         }
 
-        emit ExpenseAdded(
-            nextExpenseId,
-            msg.sender,
-            amount,
-            description,
-            participants.length,
-            block.timestamp
-        );
+        emit ExpenseAdded(nextExpenseId, msg.sender, amount, description, participants.length, block.timestamp);
 
         nextExpenseId++;
     }
 
-    function getExpenses()
-        external
-        view
-        onlyMember
-        returns (Storage.Expense[] memory)
-    {
+    function getExpenses() external view onlyMember returns (Storage.Expense[] memory) {
         return expenses;
     }
 
-    function getExpense(
-        uint256 expenseId
-    ) external view onlyMember returns (Storage.Expense memory) {
+    function getExpense(uint256 expenseId) external view onlyMember returns (Storage.Expense memory) {
         if (expenseId == 0 || expenseId >= nextExpenseId) {
             revert Error.NotFoundError("Expense not found");
         }
 
-        for (uint i = 0; i < expenses.length; i++) {
+        for (uint256 i = 0; i < expenses.length; i++) {
             if (expenses[i].id == expenseId) {
                 return expenses[i];
             }
@@ -495,9 +426,7 @@ contract Circle is ICircle {
         revert Error.NotFoundError("Expense not found");
     }
 
-    function getBalance(
-        address memberAddress
-    ) external view onlyMember returns (int256) {
+    function getBalance(address memberAddress) external view onlyMember returns (int256) {
         if (!_isMember[memberAddress]) {
             revert Error.NotFoundError("Member not found");
         }
