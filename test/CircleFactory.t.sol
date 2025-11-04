@@ -22,10 +22,7 @@ contract CircleFactoryTest is Test {
 
     function testCreateCircleRegistersCreatorAndPersistsMetadata() public {
         vm.prank(ADMIN);
-        address circleAddress = factory.createCircle(
-            CIRCLE_NAME,
-            CIRCLE_DESCRIPTION
-        );
+        address circleAddress = factory.createCircle(CIRCLE_NAME, CIRCLE_DESCRIPTION);
 
         vm.prank(ADMIN);
         address resolved = factory.getCircleByName(CIRCLE_NAME);
@@ -39,42 +36,21 @@ contract CircleFactoryTest is Test {
         vm.prank(ADMIN);
         Storage.Circle memory circleData = Circle(circleAddress).getCircle();
         assertEq(circleData.name, CIRCLE_NAME, "circle name mismatch");
-        assertEq(
-            circleData.description,
-            CIRCLE_DESCRIPTION,
-            "circle description mismatch"
-        );
-        assertEq(
-            circleData.members.length,
-            1,
-            "creator should be the only member after deployment"
-        );
+        assertEq(circleData.description, CIRCLE_DESCRIPTION, "circle description mismatch");
+        assertEq(circleData.members.length, 1, "creator should be the only member after deployment");
 
         assertEq(factory.circleCount(), 1, "factory should track circle count");
     }
 
     function testNonMembersCannotViewCircleDetails() public {
         vm.prank(ADMIN);
-        address circleAddress = factory.createCircle(
-            CIRCLE_NAME,
-            CIRCLE_DESCRIPTION
-        );
+        address circleAddress = factory.createCircle(CIRCLE_NAME, CIRCLE_DESCRIPTION);
 
         vm.startPrank(MEMBER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         factory.getCircleByName(CIRCLE_NAME);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         Circle(circleAddress).getCircle();
         vm.stopPrank();
 
@@ -85,10 +61,7 @@ contract CircleFactoryTest is Test {
 
     function testFactoryReflectsMembershipChanges() public {
         vm.prank(ADMIN);
-        address circleAddress = factory.createCircle(
-            CIRCLE_NAME,
-            CIRCLE_DESCRIPTION
-        );
+        address circleAddress = factory.createCircle(CIRCLE_NAME, CIRCLE_DESCRIPTION);
 
         vm.prank(ADMIN);
         Circle(circleAddress).addMember(MEMBER);
@@ -107,12 +80,7 @@ contract CircleFactoryTest is Test {
         vm.stopPrank();
 
         vm.prank(MEMBER);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Error.ForbiddenError.selector,
-                "Unauthorized access"
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
         Circle(circleAddress).getCircle();
 
         vm.prank(MEMBER);

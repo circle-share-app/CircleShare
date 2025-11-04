@@ -6,4 +6,6 @@ library Error {
     error UnauthorizedError(string message);
     error ForbiddenError(string message);
     error ConflictError(string message);
+    error InvalidInputError(string message);
+    error CircleInactiveError(string message);
 }
