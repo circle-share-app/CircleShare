@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Storage} from "../lib/LibraryStorage.sol";
 
-interface IGroup {
+interface ICircle {
     event MemberRemoved(address memberAddress, Storage.Role role);
     event MemberAdded(address memberAddress, Storage.Role role);
     event RoleAssigned(address memberAddress, Storage.Role role);
@@ -21,7 +21,7 @@ interface IGroup {
 
     function removeMember(address memberAddress) external;
 
-    function getGroup() external view returns (Storage.Group memory group);
+    function getCircle() external view returns (Storage.Circle memory circle);
 
     function getMembers()
         external
@@ -41,4 +41,16 @@ interface IGroup {
         address memberAddress,
         Storage.Permission permission
     ) external;
+
+    function getRole(address memberAddress)
+        external
+        view
+        returns (Storage.Role role);
+
+    function isMember(address memberAddress) external view returns (bool);
+
+    function hasPermission(
+        address memberAddress,
+        Storage.Permission permission
+    ) external view returns (bool);
 }
