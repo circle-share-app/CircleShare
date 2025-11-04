@@ -58,6 +58,52 @@ contract CircleFactory {
         return memberCircles;
     }
 
+    function getMyActiveCircles() external view returns (address[] memory) {
+        uint256 count;
+        uint256 circlesLength = _circles.length;
+        for (uint256 i; i < circlesLength; i++) {
+            ICircle circle = ICircle(_circles[i]);
+            if (circle.isMember(msg.sender) && circle.isActive()) {
+                count++;
+            }
+        }
+
+        address[] memory activeCircles = new address[](count);
+        uint256 index;
+        for (uint256 i; i < circlesLength; i++) {
+            address circleAddress = _circles[i];
+            ICircle circle = ICircle(circleAddress);
+            if (circle.isMember(msg.sender) && circle.isActive()) {
+                activeCircles[index] = circleAddress;
+                index++;
+            }
+        }
+
+        return activeCircles;
+    }
+
+    function getAllActiveCircles() external view returns (address[] memory) {
+        uint256 count;
+        uint256 circlesLength = _circles.length;
+        for (uint256 i; i < circlesLength; i++) {
+            if (ICircle(_circles[i]).isActive()) {
+                count++;
+            }
+        }
+
+        address[] memory activeCircles = new address[](count);
+        uint256 index;
+        for (uint256 i; i < circlesLength; i++) {
+            address circleAddress = _circles[i];
+            if (ICircle(circleAddress).isActive()) {
+                activeCircles[index] = circleAddress;
+                index++;
+            }
+        }
+
+        return activeCircles;
+    }
+
     function getCircleByName(
         string memory name
     ) external view returns (address) {
