@@ -1,0 +1,227 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// WEB2 AUTHENTICATION MODELS
+// ============================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Optional wallet linking
+  wallets   UserWallet[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model UserWallet {
+  id            String   @id @default(uuid())
+  userId        String
+  walletAddress String
+  isPrimary     Boolean  @default(false)
+  linkedAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, walletAddress])
+  @@index([walletAddress])
+  @@map("user_wallets")
+}
+
+// ============================================
+// BLOCKCHAIN DATA MODELS
+// ============================================
+
+model Circle {
+  id              String   @id // Using contract address as ID
+  factoryAddress  String
+  name            String   @unique
+  description     String
+  active          Boolean  @default(true)
+  creator         String   // Wallet address
+  createdAt       DateTime @default(now())
+  blockNumber     BigInt
+  transactionHash String
+
+  // Relations
+  members      Member[]
+  expenses     Expense[]
+  balances     Balance[]
+  invitations  Invitation[]
+  permissions  Permission[]
+
+  @@index([creator])
+  @@index([active])
+  @@index([factoryAddress])
+  @@map("circles")
+}
+
+enum Role {
+  USER
+  MEMBER
+  ADMIN
+  MODERATOR
+}
+
+model Member {
+  id            String    @id @default(uuid())
+  circleId      String
+  memberAddress String
+  role          Role      @default(MEMBER)
+  nickname      String?
+  addedAt       DateTime  @default(now())
+  removedAt     DateTime?
+  isActive      Boolean   @default(true)
+
+  circle Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  @@unique([circleId, memberAddress])
+  @@index([memberAddress])
+  @@index([circleId, isActive])
+  @@map("members")
+}
+
+model Expense {
+  id              String   @id // Composite: circleId + expenseId
+  circleId        String
+  expenseId       BigInt
+  description     String
+  amount          BigInt   // Using BigInt for wei amounts
+  payer           String   // Wallet address
+  participants    String[] // Array of wallet addresses
+  timestamp       DateTime
+  splitAmount     BigInt
+  remainder       BigInt
+  blockNumber     BigInt
+  transactionHash String
+  createdAt       DateTime @default(now())
+
+  circle Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  @@index([circleId])
+  @@index([payer])
+  @@index([timestamp])
+  @@map("expenses")
+}
+
+model Balance {
+  id            String   @id @default(uuid())
+  circleId      String
+  memberAddress String
+  balance       BigInt   // Using BigInt for int256
+  lastUpdated   DateTime @default(now()) @updatedAt
+
+  circle Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  @@unique([circleId, memberAddress])
+  @@index([memberAddress])
+  @@map("balances")
+}
+
+model Invitation {
+  id          String    @id @default(uuid())
+  circleId    String
+  inviter     String    // Wallet address
+  invitee     String    // Wallet address
+  nickname    String?
+  timestamp   DateTime
+  accepted    Boolean   @default(false)
+  rejected    Boolean   @default(false)
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  circle Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  @@index([circleId])
+  @@index([invitee])
+  @@index([accepted, rejected])
+  @@map("invitations")
+}
+
+enum PermissionType {
+  REMOVE_USER
+  ADD_USER
+}
+
+model Permission {
+  id            String         @id @default(uuid())
+  circleId      String
+  memberAddress String
+  permission    PermissionType
+  granted       Boolean        @default(true)
+  grantedAt     DateTime       @default(now())
+  revokedAt     DateTime?
+
+  circle Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  @@unique([circleId, memberAddress, permission])
+  @@index([memberAddress])
+  @@map("permissions")
+}
+
+// ============================================
+// EVENT SYNCHRONIZATION TRACKING
+// ============================================
+
+enum ContractType {
+  FACTORY
+  CIRCLE
+}
+
+enum SyncStatus {
+  SYNCING
+  SYNCED
+  ERROR
+  PAUSED
+}
+
+model EventSyncStatus {
+  id              String       @id @default(uuid())
+  contractAddress String       @unique
+  contractType    ContractType
+  lastSyncedBlock BigInt       @default(0)
+  lastSyncedAt    DateTime     @default(now()) @updatedAt
+  status          SyncStatus   @default(SYNCING)
+  errorMessage    String?
+  createdAt       DateTime     @default(now())
+
+  @@index([contractType])
+  @@index([status])
+  @@map("event_sync_status")
+}
+
+// ============================================
+// EVENT LOG FOR AUDITING
+// ============================================
+
+model EventLog {
+  id              String   @id @default(uuid())
+  contractAddress String
+  eventName       String
+  blockNumber     BigInt
+  transactionHash String
+  logIndex        Int
+  eventData       Json
+  processedAt     DateTime @default(now())
+
+  @@unique([transactionHash, logIndex])
+  @@index([contractAddress])
+  @@index([eventName])
+  @@index([blockNumber])
+  @@map("event_logs")
+}
