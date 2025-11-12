@@ -382,7 +382,8 @@ contract Circle is ICircle {
             participants: participants,
             timestamp: block.timestamp,
             splitAmount: splitAmount,
-            remainder: remainder
+            remainder: remainder,
+            settled: false
         });
 
         expenses.push(expense);
@@ -420,6 +421,40 @@ contract Circle is ICircle {
         for (uint256 i = 0; i < expenses.length; i++) {
             if (expenses[i].id == expenseId) {
                 return expenses[i];
+            }
+        }
+
+        revert Error.NotFoundError("Expense not found");
+    }
+
+    function updateExpenseDescription(uint256 expenseId, string memory newDescription)
+        external
+        onlyMember
+        onlyActive
+    {
+        if (expenseId == 0 || expenseId >= nextExpenseId) {
+            revert Error.NotFoundError("Expense not found");
+        }
+        if (bytes(newDescription).length == 0) {
+            revert Error.InvalidInputError("Description cannot be empty");
+        }
+        if (bytes(newDescription).length > MAX_DESCRIPTION_LENGTH) {
+            revert Error.InvalidInputError("Description too long");
+        }
+
+        for (uint256 i = 0; i < expenses.length; i++) {
+            if (expenses[i].id == expenseId) {
+                Storage.Expense storage expense = expenses[i];
+                if (expense.settled) {
+                    revert Error.ConflictError("Expense already settled");
+                }
+                if (expense.payer != msg.sender) {
+                    revert Error.ForbiddenError("Unauthorized access");
+                }
+                string memory oldDescription = expense.description;
+                expense.description = newDescription;
+                emit ExpenseDescriptionUpdated(expenseId, msg.sender, oldDescription, newDescription, block.timestamp);
+                return;
             }
         }
 

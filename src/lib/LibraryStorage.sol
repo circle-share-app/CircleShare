@@ -26,6 +26,7 @@ library Storage {
         uint256 timestamp;
         uint256 splitAmount;
         uint256 remainder;
+        bool settled;
     }
 
     struct Invitation {

@@ -24,6 +24,14 @@ interface ICircle {
         uint256 timestamp
     );
 
+    event ExpenseDescriptionUpdated(
+        uint256 indexed expenseId,
+        address updater,
+        string oldDescription,
+        string newDescription,
+        uint256 timestamp
+    );
+
     function addMember(address memberAddress) external;
 
     function removeMember(address memberAddress) external;
@@ -67,4 +75,6 @@ interface ICircle {
     function getBalance(address memberAddress) external view returns (int256);
 
     function isActive() external view returns (bool);
+
+    function updateExpenseDescription(uint256 expenseId, string memory newDescription) external;
 }
