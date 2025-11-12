@@ -714,3 +714,66 @@ contract CircleTest is Test {
         circle.inviteMember(address(100), "Too Many");
     }
 }
+
+contract CircleUpdateExpenseDescriptionTest is Test {
+    Circle private circle;
+
+    address private constant ADMIN = address(0xA11CE);
+    address private constant MEMBER = address(0xB0B);
+    address private constant STRANGER = address(0xDEAD);
+
+    function setUp() public {
+        vm.prank(ADMIN);
+        circle = new Circle(ADMIN, "Builders", "Circle for builders");
+        vm.prank(ADMIN);
+        circle.addMember(MEMBER);
+
+        address[] memory participants = new address[](2);
+        participants[0] = ADMIN;
+        participants[1] = MEMBER;
+        vm.prank(ADMIN);
+        circle.addExpense("Supplies", 100, participants); // expenseId = 1
+    }
+
+    function testUpdateExpenseDescriptionByPayer() public {
+        vm.prank(ADMIN);
+        circle.updateExpenseDescription(1, "Garden Tools");
+
+        vm.prank(ADMIN);
+        Storage.Expense memory e = circle.getExpense(1);
+        assertEq(e.description, "Garden Tools", "description should update");
+    }
+
+    function testUpdateExpenseDescriptionRevertsForNonPayer() public {
+        vm.prank(STRANGER);
+        vm.expectRevert(abi.encodeWithSelector(Error.ForbiddenError.selector, "Unauthorized access"));
+        circle.updateExpenseDescription(1, "Garden Tools");
+    }
+
+    function testUpdateExpenseDescriptionRevertsForEmpty() public {
+        vm.prank(ADMIN);
+        vm.expectRevert(abi.encodeWithSelector(Error.InvalidInputError.selector, "Description cannot be empty"));
+        circle.updateExpenseDescription(1, "");
+    }
+
+    function testUpdateExpenseDescriptionRevertsForTooLong() public {
+        string memory longDesc = new string(201);
+        bytes memory longDescBytes = bytes(longDesc);
+        for (uint256 i = 0; i < 201; i++) {
+            longDescBytes[i] = "a";
+        }
+
+        vm.prank(ADMIN);
+        vm.expectRevert(abi.encodeWithSelector(Error.InvalidInputError.selector, "Description too long"));
+        circle.updateExpenseDescription(1, string(longDescBytes));
+    }
+
+    function testUpdateExpenseDescriptionRevertsWhenCircleInactive() public {
+        vm.prank(ADMIN);
+        circle.deactivateCircle();
+
+        vm.prank(ADMIN);
+        vm.expectRevert(abi.encodeWithSelector(Error.CircleInactiveError.selector, "Circle is inactive"));
+        circle.updateExpenseDescription(1, "Garden Tools");
+    }
+}
